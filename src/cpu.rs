@@ -17,6 +17,8 @@ struct Registers {
     r14: u32,
 }
 
+const SHIFT_MASK: u32 = 0b0001_1111;
+
 // ADD - adds two registers rs1 and rs2, and stores result in rd register.
 fn add(rd: &mut u32, rs1: u32, rs2: u32) {
     *rd = rs1 + rs2;
@@ -44,17 +46,20 @@ fn and(rd: &mut u32, rs1: u32, rs2: u32) {
 
 // SLL - Performs logical left shift on rs1 by rs2 places, and stores result in rd.
 fn sll(rd: &mut u32, rs1: u32, rs2: u32) {
-    *rd = rs1 << rs2;
+    *rd = rs1 << (rs2 & SHIFT_MASK);
 }
 
 // SRL - Performs logical right shift on rs1 by rs2 places, and stores result in rd.
-fn srl(rd: &mut u32, rs1: &mut u32, rs2: &mut u32) {
-    *rd = *rs1 >> *rs2;
+fn srl(rd: &mut u32, rs1: u32, rs2: u32) {
+    *rd = rs1 >> (rs2 & SHIFT_MASK);
 }
 
-// SRA - Performs logical right shift on rs1 by rs2 places, and stores result in rd.
+// SRA - Performs arithmetic right shift on rs1 by rs2 places, and stores result in rd.
 fn sra(rd: &mut u32, rs1: u32, rs2: u32) {
-    // TODO
+    // convert to i32 to use Rust's arithmetic right shift
+    let r1 = rs1 as u32;
+    let r2  = (rs2 & SHIFT_MASK) as u32;
+    *rd = r1 >> r2;
 }
 
 // SLT - Sets rd to 1 if rs1 is less than rs2, 0 otherwise
@@ -98,10 +103,10 @@ fn create_registers() -> Registers {
 #[test]
 fn add_test_1() {
     let mut registers = create_registers();
-    let expected_value: u32 = 2;
+    let expected_value: u32 = 74336;
 
-    registers.r0 = 1;
-    registers.r1 = 1;
+    registers.r0 = 384;
+    registers.r1 = 73952;
 
     add(&mut registers.r2, registers.r0, registers.r1);
     assert_eq!(registers.r2, expected_value);
@@ -132,3 +137,96 @@ fn xor_test_1() {
     xor(&mut registers.r2, registers.r0, registers.r1);
     assert_eq!(registers.r2, expected_value);
 }
+
+// OR
+#[test]
+fn or_test_1() {
+    let mut registers = create_registers();
+    let expected_value: u32 = 0b1111_1111_1011;
+
+    registers.r0 = 0b0000_1111_1010;
+    registers.r1 = 0b1111_0000_0011;
+
+    or(&mut registers.r2, registers.r0, registers.r1);
+    assert_eq!(registers.r2, expected_value);
+}
+
+// AND
+#[test]
+fn and_test_1() {
+    let mut registers = create_registers();
+    let expected_value: u32 = 0b0000_0000_0010;
+
+    registers.r0 = 0b0000_1111_1010;
+    registers.r1 = 0b1111_0000_0011;
+
+    and(&mut registers.r2, registers.r0, registers.r1);
+    assert_eq!(registers.r2, expected_value);
+}
+
+// SLL
+#[test]
+fn sll_test_1() {
+    let mut registers = create_registers();
+    let expected_value: u32 = 32;
+
+    registers.r0 = 16;
+    registers.r1 = 1;
+
+    sll(&mut registers.r2, registers.r0, registers.r1);
+    assert_eq!(registers.r2, expected_value);
+}
+
+#[test]
+fn sll_test_2() {
+    let mut registers = create_registers();
+    let expected_value: u32 = 0;
+
+    registers.r0 = 0b1000_0000_0000_0000;
+    registers.r1 = 24;
+
+    sll(&mut registers.r2, registers.r0, registers.r1);
+    assert_eq!(registers.r2, expected_value);
+}
+
+// SRL
+#[test]
+fn srl_test_1() {
+    let mut registers = create_registers();
+    let expected_value: u32 = 0b0000_0000_0000_0000_1000_0000_0000_0000;
+
+    registers.r0 = 0b0000_0000_0000_1000_0000_0000_0000_0000;
+    registers.r1 = 4;
+
+    srl(&mut registers.r2, registers.r0, registers.r1);
+    assert_eq!(registers.r2, expected_value);
+}
+
+#[test]
+fn srl_test_2() {
+    let mut registers = create_registers();
+    let expected_value: u32 = 0b0000_1000_0000_0000_0000_0000_0000_0000_u32;
+
+    registers.r0 = 0b1000_0000_0000_0000_0000_0000_0000_0000;
+    registers.r1 = 4;
+
+    srl(&mut registers.r2, registers.r0, registers.r1);
+    assert_eq!(registers.r2, expected_value);
+}
+
+// SRA
+#[test]
+fn sra_test_1() {
+    let mut registers = create_registers();
+    let expected_value: u32 = 0b0000_0000_0000_0000_1000_0000_0000_0000;
+
+    registers.r0 = 0b0000_0000_0000_1000_0000_0000_0000_0000;
+    registers.r1 = 4;
+
+    sra(&mut registers.r2, registers.r0, registers.r1);
+    assert_eq!(registers.r2, expected_value);
+}
+
+// SLT
+
+// SLTU

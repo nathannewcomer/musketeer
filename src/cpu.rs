@@ -1,4 +1,4 @@
-const SHIFT_MASK: u32 = 0b0001_1111;
+const SHIFT_MASK: usize = 0b0001_1111;
 
 // instruction masks
 // R-type
@@ -16,76 +16,47 @@ const FUNCT_7_ADD: u32 =                0b0000_0000_0000_0000_0000_0000_0000_000
 // add x2, x4, x5
 // 00000000010100100000000100110011
 
+// x0 - zero constant
+// x1 - return address
+// x2 - stack pointer
+// x3 - global pointer
+// x4 - thread pointer
+// x5 - temporary
+// x6 - temporary
+// x7 - temporary
+// x8 - saved/frame pointer
+// x9 - saved register
+// x10 - function args/return values
+// x11 - function args/return values
+// x12 - function args
+// x13 - function args
+// x14 - function args
+// x15 - function args
+// x16 - function args
+// x17 - function args
+// x18 - saved registers
+// x19 - saved registers
+// x20 - saved registers
+// x21 - saved registers
+// x22 - saved registers
+// x23 - saved registers
+// x24 - saved registers
+// x25 - saved registers
+// x26 - saved registers
+// x27 - saved registers
+// x28 - temporaries
+// x29 - temporaries
+// x30 - temporaries
+// x31 - temporaries
+
 pub struct CPU {
-    x0: u32,                // zero constant
-    x1: u32,                // return address
-    x2: u32,                // stack pointer
-    x3: u32,                // global pointer
-    x4: u32,                // thread pointer
-    x5: u32,                // temporary
-    x6: u32,                // temporary
-    x7: u32,                // temporary
-    x8: u32,                // saved/frame pointer
-    x9: u32,                // saved register
-    x10: u32,               // function args/return values
-    x11: u32,               // function args/return values
-    x12: u32,               // function args
-    x13: u32,               // function args
-    x14: u32,               // function args
-    x15: u32,               // function args
-    x16: u32,               // function args
-    x17: u32,               // function args
-    x18: u32,               // saved registers
-    x19: u32,               // saved registers
-    x20: u32,               // saved registers
-    x21: u32,               // saved registers
-    x22: u32,               // saved registers
-    x23: u32,               // saved registers
-    x24: u32,               // saved registers
-    x25: u32,               // saved registers
-    x26: u32,               // saved registers
-    x27: u32,               // saved registers
-    x28: u32,               // temporaries
-    x29: u32,               // temporaries
-    x30: u32,               // temporaries
-    x31: u32,               // temporaries
+    registers: [u32; 32]
 }
 
 impl CPU {
     pub fn new() -> CPU {
         CPU {
-            x0: 0,
-            x1: 0,
-            x2: 0,
-            x3: 0,
-            x4: 0,
-            x5: 0,
-            x6: 0,
-            x7: 0,
-            x8: 0,
-            x9: 0,
-            x10: 0,
-            x11: 0,
-            x12: 0,
-            x13: 0,
-            x14: 0,
-            x15: 0,
-            x16: 0,
-            x17: 0,
-            x18: 0,
-            x19: 0,
-            x20: 0,
-            x21: 0,
-            x22: 0,
-            x23: 0,
-            x24: 0,
-            x25: 0,
-            x26: 0,
-            x27: 0,
-            x28: 0,
-            x29: 0,
-            x30: 0,
-            x31: 0,
+            registers: [0; 32]
         }
     }
 
@@ -102,15 +73,11 @@ impl CPU {
 
     fn parse_rtype(&mut self, instruction: u32) {
         // break up instruction into sections
-        let rd: u32 = instruction & REGISTER_DESTINATION;
+        let rd: usize = (instruction & REGISTER_DESTINATION).try_into().unwrap();;
         let funct3: u32 = instruction & FUNCT_3;
-        let register_1: u32 = instruction & REGISTER_1;
-        let register_2: u32 = instruction & REGISTER_2;
+        let rs1: usize = (instruction & REGISTER_1).try_into().unwrap();
+        let rs2: usize = (instruction & REGISTER_2).try_into().unwrap();
         let funct7: u32 = instruction & FUNCT_7;
-    
-        // get register references from instruction
-        let rs1 = self.get_reg_val(register_1);
-        let rs2 = self.get_reg_val(register_2);
     
         match (funct3, funct7) {
             (FUNCT_7_ADD, FUNCT_7_ADD) => {
@@ -120,187 +87,111 @@ impl CPU {
         }
     }
 
-    fn set_register(&mut self, rs: u32, value: u32) {
-        match rs {
-            0 => self.x0 = value,
-            1 => self.x1 = value,
-            2 => self.x2 = value,
-            3 => self.x3 = value,
-            4 => self.x4 = value,
-            5 => self.x5 = value,
-            6 => self.x6 = value,
-            7 => self.x7 = value,
-            8 => self.x8 = value,
-            9 => self.x9 = value,
-            10 => self.x10 = value,
-            11 => self.x11 = value,
-            12 => self.x12 = value,
-            13 => self.x13 = value,
-            14 => self.x14 = value,
-            15 => self.x15 = value,
-            16 => self.x16 = value,
-            17 => self.x17 = value,
-            18 => self.x18 = value,
-            19 => self.x19 = value,
-            20 => self.x20 = value,
-            21 => self.x21 = value,
-            22 => self.x22 = value,
-            23 => self.x23 = value,
-            24 => self.x24 = value,
-            25 => self.x25 = value,
-            26 => self.x26 = value,
-            27 => self.x27 = value,
-            28 => self.x28 = value,
-            29 => self.x29 = value,
-            30 => self.x30 = value,
-            31 => self.x31 = value,
-            _ => panic!("{rs} is not a valid register.")
-        }
-    }
-
-    fn get_reg_val(&self, rs: u32) -> u32 {
-        match rs {
-            0 => self.x0,
-            1 => self.x1,
-            2 => self.x2,
-            3 => self.x3,
-            4 => self.x4,
-            5 => self.x5,
-            6 => self.x6,
-            7 => self.x7,
-            8 => self.x8,
-            9 => self.x9,
-            10 => self.x10,
-            11 => self.x11,
-            12 => self.x12,
-            13 => self.x13,
-            14 => self.x14,
-            15 => self.x15,
-            16 => self.x16,
-            17 => self.x17,
-            18 => self.x18,
-            19 => self.x19,
-            20 => self.x20,
-            21 => self.x21,
-            22 => self.x22,
-            23 => self.x23,
-            24 => self.x24,
-            25 => self.x25,
-            26 => self.x26,
-            27 => self.x27,
-            28 => self.x28,
-            29 => self.x29,
-            30 => self.x30,
-            31 => self.x31,
-            _ => panic!("{rs} is not a valid register.")
-        }
-    }
-
     // add
-    fn add(&mut self, rd: u32, rs1: u32, rs2: u32) {
-        let result = self.get_reg_val(rs1)
-            + self.get_reg_val(rs2);
-        self.set_register(rd, result);
+    fn add(&mut self, rd: usize, rs1: usize, rs2: usize) {
+        let result = self.registers[rs1]
+            + self.registers[rs2];
+        self.registers[rd] = result
     }
 
     // subtract
-    fn sub(&mut self, rd: u32, rs1: u32, rs2: u32) {
-        let result = self.get_reg_val(rs1)
-            - self.get_reg_val(rs2);
-        self.set_register(rd, result);
+    fn sub(&mut self, rd: usize, rs1: usize, rs2: usize) {
+        let result = self.registers[rs1]
+            - self.registers[rs2];
+        self.registers[rd] = result
     }
 
     // exclusive or
-    fn xor(&mut self, rd: u32, rs1: u32, rs2: u32) {
-        let result = self.get_reg_val(rs1)
-            ^ self.get_reg_val(rs2);
-        self.set_register(rd, result);
+    fn xor(&mut self, rd: usize, rs1: usize, rs2: usize) {
+        let result = self.registers[rs1]
+            ^ self.registers[rs2];
+        self.registers[rd] = result
     }
 
 // or
-    fn or(&mut self, rd: u32, rs1: u32, rs2: u32) {
-        let result = self.get_reg_val(rs1)
-            | self.get_reg_val(rs2);
-        self.set_register(rd, result);
+    fn or(&mut self, rd: usize, rs1: usize, rs2: usize) {
+        let result = self.registers[rs1]
+            | self.registers[rs2];
+        self.registers[rd] = result
     }
 
     // and
-    fn and(&mut self, rd: u32, rs1: u32, rs2: u32) {
-        let result = self.get_reg_val(rs1)
-            & self.get_reg_val(rs2);
-        self.set_register(rd, result);
+    fn and(&mut self, rd: usize, rs1: usize, rs2: usize) {
+        let result = self.registers[rs1]
+            & self.registers[rs2];
+        self.registers[rd] = result
     }
 
     // shift left logical
-    fn sll(&mut self, rd: u32, rs1: u32, rs2: u32) {
-        let result = self.get_reg_val(rs1)
-            << self.get_reg_val(rs2 & SHIFT_MASK);
-        self.set_register(rd, result);
+    fn sll(&mut self, rd: usize, rs1: usize, rs2: usize) {
+        let result = self.registers[rs1]
+            << self.registers[rs2 & SHIFT_MASK];
+        self.registers[rd] = result
     }
 
     // shift right logical
-    fn srl(&mut self, rd: u32, rs1: u32, rs2: u32) {
-        let result = self.get_reg_val(rs1)
-            >> self.get_reg_val(rs2 & SHIFT_MASK);
-        self.set_register(rd, result);
+    fn srl(&mut self, rd: usize, rs1: usize, rs2: usize) {
+        let result = self.registers[rs1]
+            >> self.registers[rs2 & SHIFT_MASK];
+        self.registers[rd] = result
     }
 
     // shift right arithmetic
-    fn sra(&mut self, rd: u32, rs1: u32, rs2: u32) {
+    fn sra(&mut self, rd: usize, rs1: usize, rs2: usize) {
         // convert to i32 to use Rust's arithmetic right shift
-        let result = self.get_reg_val(rs1) as i32
-            >> self.get_reg_val(rs2 & SHIFT_MASK) as i32;
-        self.set_register(rd, result as u32);
+        let result = self.registers[rs1] as i32
+            >> self.registers[rs2 & SHIFT_MASK] as i32;
+        self.registers[rd]=  result as u32;
     }
 
     // set less than
-    fn slt(&mut self, rd: u32, rs1: u32, rs2: u32) {
-        let result = match (self.get_reg_val(rs1) as i32)
-                < (self.get_reg_val(rs2) as i32) {
+    fn slt(&mut self, rd: usize, rs1: usize, rs2: usize) {
+        let result = match (self.registers[rs1] as i32)
+                < (self.registers[rs2] as i32) {
             true => 1,
             false => 0
         };
 
-        self.set_register(rd, result);
+        self.registers[rd] = result
     }
 
     // set less than unsigned
-    fn sltu(&mut self, rd: u32, rs1: u32, rs2: u32) {
-        let result = match self.get_reg_val(rs1)
-                < self.get_reg_val(rs2) {
+    fn sltu(&mut self, rd: usize, rs1: usize, rs2: usize) {
+        let result = match self.registers[rs1]
+                < self.registers[rs2] {
             true => 1,
             false => 0
         };
 
-        self.set_register(rd, result);
+        self.registers[rd] = result
     }
 
     // add immediate
-    fn addi(&mut self, rd: u32, rs1: u32, imm: u32) {
-        let result = self.get_reg_val(rs1)
+    fn addi(&mut self, rd: usize, rs1: usize, imm: u32) {
+        let result = self.registers[rs1]
             + imm;
-        self.set_register(rd, result);
+        self.registers[rd] = result
     }
 
     // xori - xor immediate
-    fn xori(&mut self, rd: u32, rs1: u32, imm: u32) {
-        let result = self.get_reg_val(rs1)
+    fn xori(&mut self, rd: usize, rs1: usize, imm: u32) {
+        let result = self.registers[rs1]
             ^ imm;
-        self.set_register(rd, result);
+        self.registers[rd] = result
     }
 
     // ori - xor immediate
-    fn ori(&mut self, rd: u32, rs1: u32, imm: u32) {
-        let result = self.get_reg_val(rs1)
+    fn ori(&mut self, rd: usize, rs1: usize, imm: u32) {
+        let result = self.registers[rs1]
             + imm;
-        self.set_register(rd, result);
+        self.registers[rd] = result
     }
 
     // and immediate
-    fn andi(&mut self, rd: u32, rs1: u32, imm: u32) {
-        let result = self.get_reg_val(rs1)
+    fn andi(&mut self, rd: usize, rs1: usize, imm: u32) {
+        let result = self.registers[rs1]
             | imm;
-        self.set_register(rd, result);
+        self.registers[rd] = result
     }
 
     // shift left logical immediate
@@ -351,16 +242,16 @@ fn add_test_1() {
     let mut cpu = CPU::new();
     let expected_value: u32 = 74336;
 
-    let rd: u32 = 20;
-    let rs1: u32 = 18;
-    let rs2: u32 = 19;
+    let rd: usize = 20;
+    let rs1: usize = 18;
+    let rs2: usize = 19;
 
-    cpu.x18 = 384;
-    cpu.x19 = 73952;
+    cpu.registers[18] = 384;
+    cpu.registers[19] = 73952;
 
 
     cpu.add(rd, rs1, rs2);
-    assert_eq!(cpu.x20, expected_value);
+    assert_eq!(cpu.registers[20], expected_value);
 }
 
 // SUB
@@ -369,16 +260,16 @@ fn sub_test_1() {
     let mut cpu = CPU::new();
     let expected_value: u32 = 7;
 
-    let rd: u32 = 20;
-    let rs1: u32 = 18;
-    let rs2: u32 = 19;
+    let rd: usize = 20;
+    let rs1: usize = 18;
+    let rs2: usize = 19;
 
-    cpu.x18 = 12;
-    cpu.x19 = 5;
+    cpu.registers[18] = 12;
+    cpu.registers[19] = 5;
 
 
     cpu.sub(rd, rs1, rs2);
-    assert_eq!(cpu.x20, expected_value);
+    assert_eq!(cpu.registers[20], expected_value);
 }
 
 // XOR
@@ -387,16 +278,16 @@ fn xor_test_1() {
     let mut cpu = CPU::new();
     let expected_value: u32 = 0b1111_1111_1001;
 
-    let rd: u32 = 20;
-    let rs1: u32 = 18;
-    let rs2: u32 = 19;
+    let rd: usize = 20;
+    let rs1: usize = 18;
+    let rs2: usize = 19;
 
-    cpu.x18 = 0b0000_1111_1010;
-    cpu.x19 = 0b1111_0000_0011;
+    cpu.registers[18] = 0b0000_1111_1010;
+    cpu.registers[19] = 0b1111_0000_0011;
 
 
     cpu.xor(rd, rs1, rs2);
-    assert_eq!(cpu.x20, expected_value);
+    assert_eq!(cpu.registers[20], expected_value);
 }
 
 // OR
@@ -405,16 +296,16 @@ fn or_test_1() {
     let mut cpu = CPU::new();
     let expected_value: u32 = 0b1111_1111_1011;
 
-    let rd: u32 = 20;
-    let rs1: u32 = 18;
-    let rs2: u32 = 19;
+    let rd: usize = 20;
+    let rs1: usize = 18;
+    let rs2: usize = 19;
 
-    cpu.x18 = 0b0000_1111_1010;
-    cpu.x19 = 0b1111_0000_0011;
+    cpu.registers[18] = 0b0000_1111_1010;
+    cpu.registers[19] = 0b1111_0000_0011;
 
 
     cpu.or(rd, rs1, rs2);
-    assert_eq!(cpu.x20, expected_value);
+    assert_eq!(cpu.registers[20], expected_value);
 }
 
 // AND
@@ -423,16 +314,16 @@ fn and_test_1() {
     let mut cpu = CPU::new();
     let expected_value: u32 = 0b0000_0000_0010;
 
-    let rd: u32 = 20;
-    let rs1: u32 = 18;
-    let rs2: u32 = 19;
+    let rd: usize = 20;
+    let rs1: usize = 18;
+    let rs2: usize = 19;
 
-    cpu.x18 = 0b0000_1111_1010;
-    cpu.x19 = 0b1111_0000_0011;
+    cpu.registers[18] = 0b0000_1111_1010;
+    cpu.registers[19] = 0b1111_0000_0011;
 
 
     cpu.and(rd, rs1, rs2);
-    assert_eq!(cpu.x20, expected_value);
+    assert_eq!(cpu.registers[20], expected_value);
 }
 
 // SLL
@@ -441,16 +332,16 @@ fn sll_test_1() {
     let mut cpu = CPU::new();
     let expected_value: u32 = 32;
 
-    let rd: u32 = 20;
-    let rs1: u32 = 18;
-    let rs2: u32 = 19;
+    let rd: usize = 20;
+    let rs1: usize = 18;
+    let rs2: usize = 19;
 
-    cpu.x18 = 16;
-    cpu.x19 = 1;
+    cpu.registers[18] = 16;
+    cpu.registers[19] = 1;
 
 
     cpu.sll(rd, rs1, rs2);
-    assert_eq!(cpu.x20, expected_value);
+    assert_eq!(cpu.registers[20], expected_value);
 }
 
 #[test]
@@ -458,16 +349,16 @@ fn sll_test_2() {
     let mut cpu = CPU::new();
     let expected_value: u32 = 0;
 
-    let rd: u32 = 20;
-    let rs1: u32 = 18;
-    let rs2: u32 = 19;
+    let rd: usize = 20;
+    let rs1: usize = 18;
+    let rs2: usize = 19;
 
-    cpu.x18 = 0b1000_0000_0000_0000;
-    cpu.x19 = 24;
+    cpu.registers[18] = 0b1000_0000_0000_0000;
+    cpu.registers[19] = 24;
 
 
     cpu.sll(rd, rs1, rs2);
-    assert_eq!(cpu.x20, expected_value);
+    assert_eq!(cpu.registers[20], expected_value);
 }
 
 // SRL
@@ -476,16 +367,16 @@ fn srl_test_1() {
     let mut cpu = CPU::new();
     let expected_value: u32 = 0b0000_0000_0000_0000_1000_0000_0000_0000;
 
-    let rd: u32 = 20;
-    let rs1: u32 = 18;
-    let rs2: u32 = 19;
+    let rd: usize = 20;
+    let rs1: usize = 18;
+    let rs2: usize = 19;
 
-    cpu.x18 = 0b0000_0000_0000_1000_0000_0000_0000_0000;
-    cpu.x19 = 4;
+    cpu.registers[18] = 0b0000_0000_0000_1000_0000_0000_0000_0000;
+    cpu.registers[19] = 4;
 
 
     cpu.srl(rd, rs1, rs2);
-    assert_eq!(cpu.x20, expected_value);
+    assert_eq!(cpu.registers[20], expected_value);
 }
 
 #[test]
@@ -493,16 +384,16 @@ fn srl_test_2() {
     let mut cpu = CPU::new();
     let expected_value: u32 = 0b0000_1000_0000_0000_0000_0000_0000_0000_u32;
 
-    let rd: u32 = 20;
-    let rs1: u32 = 18;
-    let rs2: u32 = 19;
+    let rd: usize = 20;
+    let rs1: usize = 18;
+    let rs2: usize = 19;
 
-    cpu.x18 = 0b1000_0000_0000_0000_0000_0000_0000_0000;
-    cpu.x19 = 4;
+    cpu.registers[18] = 0b1000_0000_0000_0000_0000_0000_0000_0000;
+    cpu.registers[19] = 4;
 
 
     cpu.srl(rd, rs1, rs2);
-    assert_eq!(cpu.x20, expected_value);
+    assert_eq!(cpu.registers[20], expected_value);
 }
 
 // SRA
@@ -511,16 +402,16 @@ fn sra_test_1() {
     let mut cpu = CPU::new();
     let expected_value: u32 = 0b0000_0000_0000_0000_1000_0000_0000_0000;
 
-    let rd: u32 = 20;
-    let rs1: u32 = 18;
-    let rs2: u32 = 19;
+    let rd: usize = 20;
+    let rs1: usize = 18;
+    let rs2: usize = 19;
 
-    cpu.x18 = 0b0000_0000_0000_1000_0000_0000_0000_0000;
-    cpu.x19 = 4;
+    cpu.registers[18] = 0b0000_0000_0000_1000_0000_0000_0000_0000;
+    cpu.registers[19] = 4;
 
 
     cpu.srl(rd, rs1, rs2);
-    assert_eq!(cpu.x20, expected_value);
+    assert_eq!(cpu.registers[20], expected_value);
 }
 
 // SLT
@@ -529,16 +420,16 @@ fn slt_test_1() {
     let mut cpu = CPU::new();
     let expected_value: u32 = 1;
 
-    let rd: u32 = 20;
-    let rs1: u32 = 18;
-    let rs2: u32 = 19;
+    let rd: usize = 20;
+    let rs1: usize = 18;
+    let rs2: usize = 19;
 
-    cpu.x18 = 9;
-    cpu.x19 = 87;
+    cpu.registers[18] = 9;
+    cpu.registers[19] = 87;
 
 
     cpu.slt(rd, rs1, rs2);
-    assert_eq!(cpu.x20, expected_value);
+    assert_eq!(cpu.registers[20], expected_value);
 }
 
 #[test]
@@ -546,16 +437,16 @@ fn slt_test_2() {
     let mut cpu = CPU::new();
     let expected_value: u32 = 0;
 
-    let rd: u32 = 20;
-    let rs1: u32 = 18;
-    let rs2: u32 = 19;
+    let rd: usize = 20;
+    let rs1: usize = 18;
+    let rs2: usize = 19;
 
-    cpu.x18 = 9;
-    cpu.x19 = 0xFF_FF_FF_A9;            // 87 in two's complement
+    cpu.registers[18] = 9;
+    cpu.registers[19] = 0xFF_FF_FF_A9;            // 87 in two's complement
 
 
     cpu.slt(rd, rs1, rs2);
-    assert_eq!(cpu.x20, expected_value);
+    assert_eq!(cpu.registers[20], expected_value);
 }
 
 // SLTU
@@ -564,16 +455,16 @@ fn sltu_test_1() {
     let mut cpu = CPU::new();
     let expected_value: u32 = 1;
 
-    let rd: u32 = 20;
-    let rs1: u32 = 18;
-    let rs2: u32 = 19;
+    let rd: usize = 20;
+    let rs1: usize = 18;
+    let rs2: usize = 19;
 
-    cpu.x18 = 9;
-    cpu.x19 = 87;
+    cpu.registers[18] = 9;
+    cpu.registers[19] = 87;
 
 
     cpu.sltu(rd, rs1, rs2);
-    assert_eq!(cpu.x20, expected_value);
+    assert_eq!(cpu.registers[20], expected_value);
 }
 
 #[test]
@@ -581,16 +472,16 @@ fn sltu_test_2() {
     let mut cpu = CPU::new();
     let expected_value: u32 = 1;
 
-    let rd: u32 = 20;
-    let rs1: u32 = 18;
-    let rs2: u32 = 19;
+    let rd: usize = 20;
+    let rs1: usize = 18;
+    let rs2: usize = 19;
 
-    cpu.x18 = 9;
-    cpu.x19 = 0xFF_FF_FF_A9;            // 87 in two's complement
+    cpu.registers[18] = 9;
+    cpu.registers[19] = 0xFF_FF_FF_A9;            // 87 in two's complement
 
 
     cpu.sltu(rd, rs1, rs2);
-    assert_eq!(cpu.x20, expected_value);
+    assert_eq!(cpu.registers[20], expected_value);
 }
 
 /*
